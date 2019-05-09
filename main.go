@@ -1,89 +1,93 @@
 package main
 
 import (
- _ "github.com/go-sql-driver/mysql"
- "github.com/jinzhu/gorm"
- _ "github.com/jinzhu/gorm/dialects/mysql"
- "log"
+	"log"
+
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/lib/pq"
 )
 
-type UserModel struct{
- Id int `gorm:"primary_key";"AUTO_INCREMENT"`
- Name string `gorm:"size:255"`
- Address string `gorm:"type:varchar(100)"`
+// UserModel is user model struct.
+type UserModel struct {
+	Id      int    `gorm:"primary_key";"AUTO_INCREMENT"`
+	Name    string `gorm:"size:255"`
+	Address string `gorm:"type:varchar(100)"`
 }
 
-func main(){
- db, err := gorm.Open("postgres", "postgres://app:password@127.0.0.1:5432/postgres?sslmode=disable&binary_parameters=yes")
- if err != nil {
- log.Panic(err)
- }
- log.Println("Connection Established")
- db.DropTableIfExists(&UserModel{})
- db.AutoMigrate(&UserModel{})
+func main() {
+	// Use postgres default db
+	db, err := gorm.Open("postgres", "postgres://app:password@127.0.0.1:5432/postgres?sslmode=disable&binary_parameters=yes")
+	if err != nil {
+		log.Panic(err)
+	}
 
- user:=&UserModel{Name:"John",Address:"New York"}
- newUser:=&UserModel{Name:"Martin",Address:"Los Angeles"}
+	log.Println("Connection Established")
+	db.DropTableIfExists(&UserModel{})
+	db.AutoMigrate(&UserModel{})
 
- //To insert or create the record.
- //NOTE: we can insert multiple records too
- db.Debug().Create(user)
- //Also we can use save that will return primary key
- db.Debug().Save(newUser)
+	user := &UserModel{Name: "John", Address: "New York"}
+	newUser := &UserModel{Name: "Martin", Address: "Los Angeles"}
 
- //Update Record
- db.Debug().Find(&user).Update("address", "California") 
- //It will update John's address to California
+	//To insert or create the record.
+	//NOTE: we can insert multiple records too
+	db.Debug().Create(user)
+	//Also we can use save that will return primary key
+	db.Debug().Save(newUser)
 
- // Select, edit, and save
- db.Debug().Find(&user)
- user.Address = "Brisbane"
- db.Debug().Save(&user)
+	//Update Record
+	db.Debug().Find(&user).Update("address", "California")
+	//It will update John's address to California
 
- // Update with column names, not attribute names
- db.Debug().Model(&user).Update("Name", "Jack")
+	// Select, edit, and save
+	db.Debug().Find(&user)
+	user.Address = "Brisbane"
+	db.Debug().Save(&user)
 
- db.Debug().Model(&user).Updates(
- map[string]interface{}{
- "Name": "Amy",
- "Address": "Boston",
- })
+	// Update with column names, not attribute names
+	db.Debug().Model(&user).Update("Name", "Jack")
 
- // UpdateColumn()
- db.Debug().Model(&user).UpdateColumn("Address", "Phoenix")
- db.Debug().Model(&user).UpdateColumns(
- map[string]interface{}{
- "Name": "Taylor",
- "Address": "Houston",
- })
- // Using Find()
- db.Debug().Find(&user).Update("Address", "San Diego")
+	db.Debug().Model(&user).Updates(
+		map[string]interface{}{
+			"Name":    "Amy",
+			"Address": "Boston",
+		})
 
- // Batch Update
- db.Debug().Table("user_models").Where("address = ?", "california").Update("name", "Walker")
+	// UpdateColumn()
+	db.Debug().Model(&user).UpdateColumn("Address", "Phoenix")
+	db.Debug().Model(&user).UpdateColumns(
+		map[string]interface{}{
+			"Name":    "Taylor",
+			"Address": "Houston",
+		})
+	// Using Find()
+	db.Debug().Find(&user).Update("Address", "San Diego")
 
- // Select records and delete it
- db.Debug().Table("user_models").Where("address= ?", "San Diego").Delete(&UserModel{})
+	// Batch Update
+	db.Debug().Table("user_models").Where("address = ?", "california").Update("name", "Walker")
 
- db.Debug().Where("address = ?", "Los Angeles").First(&user)
- log.Println(user)
- db.Debug().Where("address = ?", "Los Angeles").Find(&user)
- log.Println(user)
- db.Debug().Where("address <> ?", "New York").Find(&user)
- log.Println(user)
- // IN
- db.Debug().Where("name in (?)", []string{"John", "Martin"}).Find(&user)
- log.Println(user)
- // LIKE
- db.Debug().Where("name LIKE ?", "%ti%").Find(&user)
- log.Println(user)
- // AND
- db.Debug().Where("name = ? AND address >= ?", "Martin", "Los Angeles").Find(&user)
- log.Println(user)
+	// Select records and delete it
+	db.Debug().Table("user_models").Where("address= ?", "San Diego").Delete(&UserModel{})
 
- //Find the record and delete it
- db.Where("address=?", "Los Angeles").Delete(&UserModel{})
+	db.Debug().Where("address = ?", "Los Angeles").First(&user)
+	log.Println(user)
+	db.Debug().Where("address = ?", "Los Angeles").Find(&user)
+	log.Println(user)
+	db.Debug().Where("address <> ?", "New York").Find(&user)
+	log.Println(user)
+	// IN
+	db.Debug().Where("name in (?)", []string{"John", "Martin"}).Find(&user)
+	log.Println(user)
+	// LIKE
+	db.Debug().Where("name LIKE ?", "%ti%").Find(&user)
+	log.Println(user)
+	// AND
+	db.Debug().Where("name = ? AND address >= ?", "Martin", "Los Angeles").Find(&user)
+	log.Println(user)
 
- // Select all records from a model and delete all
- db.Debug().Model(&UserModel{}).Delete(&UserModel{})
+	//Find the record and delete it
+	db.Where("address=?", "Los Angeles").Delete(&UserModel{})
+
+	// Select all records from a model and delete all
+	db.Debug().Model(&UserModel{}).Delete(&UserModel{})
 }
